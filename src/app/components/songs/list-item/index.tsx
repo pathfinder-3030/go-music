@@ -1,38 +1,61 @@
-import { useState } from "react";
+"use client";
+
 import { FileText } from "lucide-react";
 import Image from "next/image";
 
 type Props = {
+  id: number;
   title: string;
   artist: string;
   albumTitle: string;
   lyrics?: string;
   albumCover?: string;
+  audioSrc?: string;
+  checked: boolean;
+  onCheckChange: (id: number, checked: boolean) => void;
 };
 
-export default function SongListItem({ title, artist, albumTitle, lyrics, albumCover }: Props) {
-  const [checked, setChecked] = useState(false);
-
-  const handleLyricsClick = () => {
+export default function SongListItem({ id, title, artist, albumTitle, lyrics, albumCover, audioSrc, checked, onCheckChange }: Props) {
+  const handleLyricsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (lyrics) {
       console.log("歌詞:", lyrics);
     }
   };
 
+  const handlePlay = () => {
+    if (audioSrc) {
+      const audio = new Audio(audioSrc);
+      audio.play();
+    }
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onCheckChange(id, e.target.checked);
+  };
+
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div
+      onClick={handlePlay}
       style={{
         display: "flex",
         alignItems: "center",
         marginTop: "16px",
         justifyContent: "space-between",
+        cursor: audioSrc ? "pointer" : "default",
       }}
     >
       <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
         <input
           type='checkbox'
           checked={checked}
-          onChange={(e) => setChecked(e.target.checked)}
+          onChange={handleCheckboxChange}
+          onClick={handleCheckboxClick}
           style={{ width: "18px", height: "18px", cursor: "pointer" }}
         />
         {albumCover ? (
