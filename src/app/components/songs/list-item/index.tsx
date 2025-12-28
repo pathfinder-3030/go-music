@@ -10,12 +10,11 @@ type Props = {
   albumTitle: string;
   lyrics?: string;
   albumCover?: string;
-  audioSrc?: string;
   checked: boolean;
   onCheckChange: (id: number, checked: boolean) => void;
 };
 
-export default function SongListItem({ id, title, artist, albumTitle, lyrics, albumCover, audioSrc, checked, onCheckChange }: Props) {
+export default function SongListItem({ id, title, artist, albumTitle, lyrics, albumCover, checked, onCheckChange }: Props) {
   const handleLyricsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (lyrics) {

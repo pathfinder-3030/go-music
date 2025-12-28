@@ -7,7 +7,6 @@ import SongListItem from "../components/songs/list-item";
 
 export default function Songs() {
   const [checkedSongs, setCheckedSongs] = useState<number[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongId, setCurrentSongId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -26,7 +25,6 @@ export default function Songs() {
     // 同じ曲で一時停止中の場合は再開
     if (currentSongId === firstCheckedSong.id && audioRef.current && audioRef.current.paused) {
       audioRef.current.play();
-      setIsPlaying(true);
       return;
     }
 
@@ -45,18 +43,12 @@ export default function Songs() {
     audioRef.current = audio;
     setCurrentSongId(firstCheckedSong.id);
 
-    audio.onended = () => {
-      setIsPlaying(false);
-    };
-
     audio.play();
-    setIsPlaying(true);
   };
 
   const handlePause = () => {
     if (audioRef.current) {
       audioRef.current.pause();
-      setIsPlaying(false);
     }
   };
 
@@ -136,7 +128,6 @@ export default function Songs() {
               artist={song.artist}
               albumTitle={song.albumTitle}
               lyrics={song.lyrics}
-              audioSrc={song.audioSrc}
               checked={checkedSongs.includes(song.id)}
               onCheckChange={handleCheckChange}
             />
