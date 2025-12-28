@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Play } from "lucide-react";
+import { useState, useRef } from "react";
+import { Play, Pause } from "lucide-react";
 import Menu from "../components/menu";
 import SongListItem from "../components/songs/list-item";
 
 export default function Songs() {
   const [checkedSongs, setCheckedSongs] = useState<number[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentSongId, setCurrentSongId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleCheckChange = (id: number, checked: boolean) => {
     if (checked) {
@@ -18,9 +21,42 @@ export default function Songs() {
 
   const handlePlayChecked = () => {
     const firstCheckedSong = songs.find((song) => checkedSongs.includes(song.id));
-    if (firstCheckedSong?.audioSrc) {
-      const audio = new Audio(firstCheckedSong.audioSrc);
-      audio.play();
+    if (!firstCheckedSong?.audioSrc) return;
+
+    // 同じ曲で一時停止中の場合は再開
+    if (currentSongId === firstCheckedSong.id && audioRef.current && audioRef.current.paused) {
+      audioRef.current.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    // 既に再生中の場合は何もしない
+    if (currentSongId === firstCheckedSong.id && audioRef.current && !audioRef.current.paused) {
+      return;
+    }
+
+    // 新しい曲を再生
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const audio = new Audio(firstCheckedSong.audioSrc);
+    audioRef.current = audio;
+    setCurrentSongId(firstCheckedSong.id);
+
+    audio.onended = () => {
+      setIsPlaying(false);
+    };
+
+    audio.play();
+    setIsPlaying(true);
+  };
+
+  const handlePause = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -29,29 +65,65 @@ export default function Songs() {
       <Menu />
       {/* コンテンツ */}
       <div style={{ width: "100%", height: "100%", padding: "20px 30px" }}>
-        <div style={{ borderBottom: "2.5px solid #d1d5db", paddingBottom: "16px", display: "flex", alignItems: "center", gap: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {checkedSongs.length > 0 && (
-              <button
-                onClick={handlePlayChecked}
-                style={{
-                  background: "#3b82f6",
-                  border: "none",
-                  borderRadius: "50%",
-                  width: "40px",
-                  height: "40px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Play size={20} color="#fff" fill="#fff" />
-              </button>
-            )}
-            <div>
+        <div
+          style={{
+            borderBottom: "2.5px solid #d1d5db",
+            paddingBottom: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
+            <div style={{ width: "100%" }}>
               <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>ライブラリ</span>
-              <p style={{ fontSize: "1.5rem", fontWeight: "bold", lineHeight: 1.5 }}>ソング</p>
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                <p style={{ fontSize: "1.5rem", fontWeight: "bold", lineHeight: 1.5 }}>ソング</p>
+                {checkedSongs.length > 0 && (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={handlePlayChecked}
+                      style={{
+                        background: "#00c55e",
+                        border: "none",
+                        borderRadius: "4px",
+                        padding: "8px 0px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        width: 100,
+                      }}
+                    >
+                      <Play size={16} color='#fff' fill='#fff' />
+                      <span style={{ color: "#fff", fontWeight: "bold", fontSize: "1rem" }}>
+                        再生
+                      </span>
+                    </button>
+                    <button
+                      onClick={handlePause}
+                      style={{
+                        background: "#fff",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "4px",
+                        padding: "8px 0px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        width: 100,
+                      }}
+                    >
+                      <Pause size={16} color='#4b5563' fill='#4b5563' />
+                      <span style={{ color: "#4b5563", fontWeight: "bold", fontSize: "1rem" }}>
+                        停止
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

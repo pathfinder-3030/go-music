@@ -23,31 +23,17 @@ export default function SongListItem({ id, title, artist, albumTitle, lyrics, al
     }
   };
 
-  const handlePlay = () => {
-    if (audioSrc) {
-      const audio = new Audio(audioSrc);
-      audio.play();
-    }
-  };
-
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
     onCheckChange(id, e.target.checked);
-  };
-
-  const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
   };
 
   return (
     <div
-      onClick={handlePlay}
       style={{
         display: "flex",
         alignItems: "center",
         marginTop: "16px",
         justifyContent: "space-between",
-        cursor: audioSrc ? "pointer" : "default",
       }}
     >
       <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
@@ -55,7 +41,6 @@ export default function SongListItem({ id, title, artist, albumTitle, lyrics, al
           type='checkbox'
           checked={checked}
           onChange={handleCheckboxChange}
-          onClick={handleCheckboxClick}
           style={{ width: "18px", height: "18px", cursor: "pointer" }}
         />
         {albumCover ? (
