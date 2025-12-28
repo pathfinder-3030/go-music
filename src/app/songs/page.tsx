@@ -4,11 +4,14 @@ import { useState, useRef } from "react";
 import { Play, Pause } from "lucide-react";
 import Menu from "../components/menu";
 import SongListItem from "../components/songs/list-item";
+import Player from "../components/player";
 
 export default function Songs() {
   const [checkedSongs, setCheckedSongs] = useState<number[]>([]);
   const [currentSongId, setCurrentSongId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const currentSong = songs.find((song) => song.id === currentSongId);
 
   const handleCheckChange = (id: number, checked: boolean) => {
     if (checked) {
@@ -135,6 +138,16 @@ export default function Songs() {
         </div>
       </div>
       {/* コンテンツ */}
+
+      {/* プレイヤー */}
+      {currentSong && (
+        <Player
+          audioRef={audioRef}
+          title={currentSong.title}
+          artist={currentSong.artist}
+          albumTitle={currentSong.albumTitle}
+        />
+      )}
     </div>
   );
 }
@@ -142,59 +155,52 @@ export default function Songs() {
 const songs = [
   {
     id: 1,
-    title: "夜に駆ける",
-    artist: "YOASOBI",
-    albumTitle: "THE BOOK",
+    title: "俺",
+    artist: "HAMAGO",
+    albumTitle: "回遊",
     lyrics: "沈むように溶けてゆくように...",
     audioSrc: "/audio/俺.m4a",
   },
   {
     id: 2,
-    title: "群青",
-    artist: "YOASOBI",
-    albumTitle: "THE BOOK 2",
+    title: "生きる",
+    artist: "HAMAGO",
+    albumTitle: "ハンバーガーライム",
     lyrics: "さよならだけ 告げて消えた...",
   },
   {
     id: 3,
-    title: "怪物",
-    artist: "YOASOBI",
-    albumTitle: "怪物 / 優しい彗星",
+    title: "オレ",
+    artist: "HAMAGO",
+    albumTitle: "回遊",
     lyrics: "正しさとは 愚かさとは...",
   },
   {
     id: 4,
-    title: "Lemon",
-    artist: "米津玄師",
-    albumTitle: "Lemon",
+    title: "夜のまま",
+    artist: "HAMAGO & AK-69",
+    albumTitle: "回遊",
     lyrics: "夢ならばどれほどよかったでしょう...",
   },
   {
     id: 5,
-    title: "紅蓮華",
-    artist: "LiSA",
-    albumTitle: "紅蓮華",
+    title: "南風バウンス",
+    artist: "HAMAGO",
+    albumTitle: "回遊",
     lyrics: "強くなれる理由を知った...",
   },
   {
     id: 6,
-    title: "炎",
-    artist: "LiSA",
-    albumTitle: "炎",
+    title: "上がる",
+    artist: "HAMAGO",
+    albumTitle: "ヒップホッパー",
     lyrics: "さよならありがとう 声の限り...",
   },
   {
     id: 7,
-    title: "マリーゴールド",
-    artist: "あいみょん",
-    albumTitle: "青春のエキサイトメント",
+    title: "クリぼっち",
+    artist: "HAMAGO",
+    albumTitle: "タスマニアビーフ",
     lyrics: "風の強さがちょっと...",
-  },
-  {
-    id: 8,
-    title: "Pretender",
-    artist: "Official髭男dism",
-    albumTitle: "Traveler",
-    lyrics: "君とのラブストーリー...",
   },
 ];
