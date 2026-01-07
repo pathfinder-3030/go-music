@@ -13,5 +13,6 @@ export type Song = {
   album_title: string | null;
   lyrics: string | null;
   audio_url: string | null;
+  album_cover: string | null;
   created_at: string;
 };

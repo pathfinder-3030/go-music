@@ -155,6 +155,7 @@ export default function Songs() {
                 artist={song.artist}
                 albumTitle={song.album_title || ""}
                 lyrics={song.lyrics || ""}
+                albumCover={song.album_cover || undefined}
                 checked={checkedSongs.includes(song.id)}
                 onCheckChange={handleCheckChange}
               />
@@ -171,6 +172,7 @@ export default function Songs() {
           title={currentSong.title}
           artist={currentSong.artist}
           albumTitle={currentSong.album_title || ""}
+          albumCover={currentSong.album_cover || undefined}
         />
       )}
     </div>
