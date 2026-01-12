@@ -5,6 +5,7 @@ import { Play, Pause } from "lucide-react";
 import Menu from "../components/menu";
 import SongListItem from "../components/songs/list-item";
 import Player from "../components/player";
+import PlayPrivateSongModal from "../components/modal/play-private-song-modal";
 import { getAllSongs } from "@/lib/api/songs";
 import { Song } from "@/lib/supabase";
 
@@ -13,6 +14,8 @@ export default function Songs() {
   const [loading, setLoading] = useState(true);
   const [checkedSongs, setCheckedSongs] = useState<number[]>([]);
   const [currentSongId, setCurrentSongId] = useState<number | null>(null);
+  const [isPrivateModalOpen, setIsPrivateModalOpen] = useState(false);
+  const [privateSongInfo, setPrivateSongInfo] = useState<{ title: string; artist: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentSong = songs.find((song) => song.id === currentSongId);
@@ -39,6 +42,16 @@ export default function Songs() {
   const handlePlayChecked = () => {
     const firstCheckedSong = songs.find((song) => checkedSongs.includes(song.id));
     if (!firstCheckedSong?.audio_url) return;
+
+    // 非公開音源のチェック
+    if (!firstCheckedSong.is_public) {
+      setPrivateSongInfo({
+        title: firstCheckedSong.title,
+        artist: firstCheckedSong.artist,
+      });
+      setIsPrivateModalOpen(true);
+      return;
+    }
 
     // 同じ曲で一時停止中の場合は再開
     if (currentSongId === firstCheckedSong.id && audioRef.current && audioRef.current.paused) {
@@ -156,6 +169,7 @@ export default function Songs() {
                 albumTitle={song.album_title || ""}
                 lyrics={song.lyrics || ""}
                 albumCover={song.album_cover || undefined}
+                isPublic={song.is_public}
                 checked={checkedSongs.includes(song.id)}
                 onCheckChange={handleCheckChange}
               />
@@ -175,6 +189,14 @@ export default function Songs() {
           albumCover={currentSong.album_cover || undefined}
         />
       )}
+
+      {/* 非公開音源モーダル */}
+      <PlayPrivateSongModal
+        isOpen={isPrivateModalOpen}
+        onClose={() => setIsPrivateModalOpen(false)}
+        songTitle={privateSongInfo?.title || ""}
+        songArtist={privateSongInfo?.artist || ""}
+      />
     </div>
   );
 }

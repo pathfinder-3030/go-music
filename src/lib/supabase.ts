@@ -14,5 +14,6 @@ export type Song = {
   lyrics: string | null;
   audio_url: string | null;
   album_cover: string | null;
+  is_public: boolean;
   created_at: string;
 };
