@@ -1,10 +1,13 @@
 "use client";
 
-import { FileText, Lock } from "lucide-react";
+import { FileText } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import LyricsModal from "../../modal/lyrics-modal";
 import PrivateSongModal from "../../modal/private-song-modal";
+import PasswordInputModal from "../../modal/password-input-modal";
+import Label from "../../label";
+import { isAuthorized, addAuthorization } from "@/lib/auth";
 
 type Props = {
   id: number;
@@ -14,20 +17,63 @@ type Props = {
   lyrics?: string;
   albumCover?: string;
   isPublic: boolean;
+  password?: string | null;
   checked: boolean;
   onCheckChange: (id: number, checked: boolean) => void;
 };
 
-export default function SongListItem({ id, title, artist, albumTitle, lyrics, albumCover, isPublic, checked, onCheckChange }: Props) {
+export default function SongListItem({
+  id,
+  title,
+  artist,
+  albumTitle,
+  lyrics,
+  albumCover,
+  isPublic,
+  password,
+  checked,
+  onCheckChange,
+}: Props) {
   const [isLyricsModalOpen, setIsLyricsModalOpen] = useState(false);
   const [isPrivateModalOpen, setIsPrivateModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordError, setPasswordError] = useState<string>("");
 
   const handleLyricsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isPublic) {
-      setIsPrivateModalOpen(true);
+      // パスワードが設定されている場合
+      if (password) {
+        // 既に認証済みの場合は歌詞を表示
+        if (isAuthorized(id)) {
+          setIsLyricsModalOpen(true);
+        } else {
+          // パスワード入力モーダルを表示
+          setPasswordError("");
+          setIsPasswordModalOpen(true);
+        }
+      } else {
+        // パスワードが設定されていない場合は非公開モーダルを表示
+        setIsPrivateModalOpen(true);
+      }
     } else {
       setIsLyricsModalOpen(true);
+    }
+  };
+
+  const handlePasswordSubmit = (inputPassword: string) => {
+    // パスワードチェック
+    if (inputPassword === password) {
+      // 認証成功
+      addAuthorization(id);
+      setIsPasswordModalOpen(false);
+      setPasswordError("");
+
+      // 歌詞モーダルを表示
+      setIsLyricsModalOpen(true);
+    } else {
+      // 認証失敗
+      setPasswordError("パスワードが正しくありません");
     }
   };
 
@@ -73,9 +119,7 @@ export default function SongListItem({ id, title, artist, albumTitle, lyrics, al
           )}
           <div style={{ width: "200px", display: "flex", alignItems: "center", gap: "8px" }}>
             <p style={{ margin: 0 }}>{title}</p>
-            {!isPublic && (
-              <Lock size={16} color="#ef4444" title="非公開音源" />
-            )}
+            {!isPublic && <Label text="非公開" variant="gray" />}
           </div>
         </div>
         <div style={{ width: "200px" }}>
@@ -113,6 +157,18 @@ export default function SongListItem({ id, title, artist, albumTitle, lyrics, al
         onClose={handleClosePrivateModal}
         title={title}
         artist={artist}
+      />
+
+      <PasswordInputModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setPasswordError("");
+        }}
+        onSubmit={handlePasswordSubmit}
+        songTitle={title}
+        songArtist={artist}
+        errorMessage={passwordError}
       />
     </>
   );

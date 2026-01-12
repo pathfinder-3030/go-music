@@ -6,8 +6,10 @@ import Menu from "../components/menu";
 import SongListItem from "../components/songs/list-item";
 import Player from "../components/player";
 import PlayPrivateSongModal from "../components/modal/play-private-song-modal";
+import PasswordInputModal from "../components/modal/password-input-modal";
 import { getAllSongs } from "@/lib/api/songs";
 import { Song } from "@/lib/supabase";
+import { isAuthorized, addAuthorization } from "@/lib/auth";
 
 export default function Songs() {
   const [songs, setSongs] = useState<Song[]>([]);
@@ -16,6 +18,9 @@ export default function Songs() {
   const [currentSongId, setCurrentSongId] = useState<number | null>(null);
   const [isPrivateModalOpen, setIsPrivateModalOpen] = useState(false);
   const [privateSongInfo, setPrivateSongInfo] = useState<{ title: string; artist: string } | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordSong, setPasswordSong] = useState<Song | null>(null);
+  const [passwordError, setPasswordError] = useState<string>("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentSong = songs.find((song) => song.id === currentSongId);
@@ -39,28 +44,17 @@ export default function Songs() {
     }
   };
 
-  const handlePlayChecked = () => {
-    const firstCheckedSong = songs.find((song) => checkedSongs.includes(song.id));
-    if (!firstCheckedSong?.audio_url) return;
-
-    // 非公開音源のチェック
-    if (!firstCheckedSong.is_public) {
-      setPrivateSongInfo({
-        title: firstCheckedSong.title,
-        artist: firstCheckedSong.artist,
-      });
-      setIsPrivateModalOpen(true);
-      return;
-    }
+  const playSong = (song: Song) => {
+    if (!song.audio_url) return;
 
     // 同じ曲で一時停止中の場合は再開
-    if (currentSongId === firstCheckedSong.id && audioRef.current && audioRef.current.paused) {
+    if (currentSongId === song.id && audioRef.current && audioRef.current.paused) {
       audioRef.current.play();
       return;
     }
 
     // 既に再生中の場合は何もしない
-    if (currentSongId === firstCheckedSong.id && audioRef.current && !audioRef.current.paused) {
+    if (currentSongId === song.id && audioRef.current && !audioRef.current.paused) {
       return;
     }
 
@@ -70,11 +64,62 @@ export default function Songs() {
       audioRef.current = null;
     }
 
-    const audio = new Audio(firstCheckedSong.audio_url);
+    const audio = new Audio(song.audio_url);
     audioRef.current = audio;
-    setCurrentSongId(firstCheckedSong.id);
+    setCurrentSongId(song.id);
 
     audio.play();
+  };
+
+  const handlePlayChecked = () => {
+    const firstCheckedSong = songs.find((song) => checkedSongs.includes(song.id));
+    if (!firstCheckedSong?.audio_url) return;
+
+    // 非公開音源のチェック
+    if (!firstCheckedSong.is_public) {
+      // パスワードが設定されている場合
+      if (firstCheckedSong.password) {
+        // 既に認証済みの場合は再生
+        if (isAuthorized(firstCheckedSong.id)) {
+          playSong(firstCheckedSong);
+        } else {
+          // パスワード入力モーダルを表示
+          setPasswordSong(firstCheckedSong);
+          setPasswordError("");
+          setIsPasswordModalOpen(true);
+        }
+      } else {
+        // パスワードが設定されていない場合は非公開モーダルを表示
+        setPrivateSongInfo({
+          title: firstCheckedSong.title,
+          artist: firstCheckedSong.artist,
+        });
+        setIsPrivateModalOpen(true);
+      }
+      return;
+    }
+
+    // 公開曲は通常再生
+    playSong(firstCheckedSong);
+  };
+
+  const handlePasswordSubmit = (inputPassword: string) => {
+    if (!passwordSong) return;
+
+    // パスワードチェック
+    if (inputPassword === passwordSong.password) {
+      // 認証成功
+      addAuthorization(passwordSong.id);
+      setIsPasswordModalOpen(false);
+      setPasswordError("");
+      setPasswordSong(null);
+
+      // 曲を再生
+      playSong(passwordSong);
+    } else {
+      // 認証失敗
+      setPasswordError("パスワードが正しくありません");
+    }
   };
 
   const handlePause = () => {
@@ -170,6 +215,7 @@ export default function Songs() {
                 lyrics={song.lyrics || ""}
                 albumCover={song.album_cover || undefined}
                 isPublic={song.is_public}
+                password={song.password}
                 checked={checkedSongs.includes(song.id)}
                 onCheckChange={handleCheckChange}
               />
@@ -196,6 +242,20 @@ export default function Songs() {
         onClose={() => setIsPrivateModalOpen(false)}
         songTitle={privateSongInfo?.title || ""}
         songArtist={privateSongInfo?.artist || ""}
+      />
+
+      {/* パスワード入力モーダル */}
+      <PasswordInputModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setPasswordError("");
+          setPasswordSong(null);
+        }}
+        onSubmit={handlePasswordSubmit}
+        songTitle={passwordSong?.title || ""}
+        songArtist={passwordSong?.artist || ""}
+        errorMessage={passwordError}
       />
     </div>
   );
