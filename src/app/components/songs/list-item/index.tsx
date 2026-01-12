@@ -99,7 +99,7 @@ export default function SongListItem({
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <input
             type='checkbox'
             checked={checked}
@@ -119,7 +119,7 @@ export default function SongListItem({
           )}
           <div style={{ width: "200px", display: "flex", alignItems: "center", gap: "8px" }}>
             <p style={{ margin: 0 }}>{title}</p>
-            {!isPublic && <Label text="非公開" variant="gray" />}
+            {!isPublic && <Label text='非公開' variant='gray' />}
           </div>
         </div>
         <div style={{ width: "200px" }}>
